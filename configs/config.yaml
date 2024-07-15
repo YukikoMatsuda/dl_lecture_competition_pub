@@ -7,7 +7,7 @@ num_workers: 4
 seed: 1234
 use_wandb: False
 
-data_dir: data
+data_dir: /content/drive/MyDrive/810_松尾研/DeepLearning_2024/_final_assignment/data
 
 # Evaluation
 model_path: 
