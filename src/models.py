@@ -5,25 +5,13 @@ from einops.layers.torch import Rearrange
 
 
 class BasicConvClassifier(nn.Module):
-    def __init__(
-        self,
-        num_classes: int,
-        seq_len: int,
-        in_channels: int,
-        hid_dim: int = 128
-    ) -> None:
-        super().__init__()
-
-        self.blocks = nn.Sequential(
-            ConvBlock(in_channels, hid_dim),
-            ConvBlock(hid_dim, hid_dim),
-        )
-
-        self.head = nn.Sequential(
-            nn.AdaptiveAvgPool1d(1),
-            Rearrange("b d 1 -> b d"),
-            nn.Linear(hid_dim, num_classes),
-        )
+    def __init__(self, num_classes, seq_len, num_channels, dropout_rate=0.5):
+        super(BasicConvClassifier, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=num_channels, out_channels=32, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.fc1 = nn.Linear(64 * (seq_len // 2) * (seq_len // 2), 128)
+        self.fc2 = nn.Linear(128, num_classes)
+        self.dropout = nn.Dropout(p=dropout_rate)
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         """_summary_
