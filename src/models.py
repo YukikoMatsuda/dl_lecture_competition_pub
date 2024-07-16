@@ -9,20 +9,20 @@ class BasicConvClassifier(nn.Module):
         super(BasicConvClassifier, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=num_channels, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
-        self.fc1 = nn.Linear(64 * (seq_len // 2) * (seq_len // 2), 128)
+        self.fc1 = nn.Linear(64 * (seq_len // 4) * (seq_len // 4), 128)  # Poolingでサイズが1/4になると仮定
         self.fc2 = nn.Linear(128, num_classes)
         self.dropout = nn.Dropout(p=dropout_rate)
 
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
-        """_summary_
-        Args:
-            X ( b, c, t ): _description_
-        Returns:
-            X ( b, num_classes ): _description_
-        """
-        X = self.blocks(X)
-
-        return self.head(X)
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2)
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2)
+        x = x.view(x.size(0), -1)  # Flatten
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
 
 
 class ConvBlock(nn.Module):
