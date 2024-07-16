@@ -7,11 +7,7 @@ num_workers: 4
 seed: 1234
 use_wandb: False
 
-defaults:
-  - override hydra/job_logging: colorlog
-  - override hydra/hydra_logging: colorlog
-
-data_dir: /content/drive/MyDrive/810_松尾研/DeepLearning_2024/_final_assignment/data/
+data_dir: data
 
 # Evaluation
 model_path: 
