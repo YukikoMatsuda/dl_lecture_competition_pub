@@ -51,7 +51,7 @@ def run(args: DictConfig):
     # ------------------
     #  Early Stopping
     # ------------------
-    patience = 5
+    patience = 2
     best_val_loss = float('inf')
     best_val_acc = 0
     epochs_no_improve = 0
