@@ -5,31 +5,38 @@ from einops.layers.torch import Rearrange
 
 
 class BasicConvClassifier(nn.Module):
-    def __init__(self, num_classes, seq_len, num_channels):
-        super(BasicConvClassifier, self).__init__()
-        self.conv1 = nn.Conv1d(in_channels=num_channels, out_channels=64, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
-        self.bn3 = nn.BatchNorm1d(256)
-        self.fc1 = nn.Linear(256 * (seq_len // 8), 256)
-        self.fc2 = nn.Linear(256, num_classes)
-        self.dropout = nn.Dropout(p=0.5)
+    def __init__(
+        self,
+        num_classes: int,
+        seq_len: int,
+        in_channels: int,
+        hid_dim: int = 128
+    ) -> None:
+        super().__init__()
 
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.max_pool1d(x, 2)
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.max_pool1d(x, 2)
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.max_pool1d(x, 2)
-        x = x.view(x.size(0), -1)  # Flatten
-        x = F.relu(self.fc1(x))
-        x = self.dropout(x)
-        x = self.fc2(x)
-        return x
-        
+        self.blocks = nn.Sequential(
+            ConvBlock(in_channels, hid_dim),
+            ConvBlock(hid_dim, hid_dim),
+        )
+
+        self.head = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            Rearrange("b d 1 -> b d"),
+            nn.Linear(hid_dim, num_classes),
+        )
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """_summary_
+        Args:
+            X ( b, c, t ): _description_
+        Returns:
+            X ( b, num_classes ): _description_
+        """
+        X = self.blocks(X)
+
+        return self.head(X)
+
+
 class ConvBlock(nn.Module):
     def __init__(
         self,
